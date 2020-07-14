@@ -10,13 +10,46 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 
 from utils.dataset import DatasetRetriever
 from utils.aug import get_train_transforms, get_valid_transforms
-from utils.train_utils import Fitter, TrainGlobalConfig
+from utils.train_utils import Fitter
 from effdet import get_efficientdet_config, EfficientDet, DetBenchTrain
 from effdet.efficientdet import HeadNet
 
 
 csv_path = r"C:\Users\hundredark\Desktop\paper\wheat\eff_wheat\train_adjusted_v2.csv"
 TRAIN_ROOT_PATH = r'C:\Users\hundredark\Desktop\paper\wheat\dataset\all_images\trainval'
+
+
+class TrainGlobalConfig:
+    num_workers = 2
+    batch_size = 2
+    n_epochs = 40  # n_epochs = 40
+    lr = 0.0004
+
+    folder = 'effdet5-cutmix-augmix1'
+
+    # -------------------
+    verbose = True
+    verbose_step = 1
+    # -------------------
+
+    # --------------------
+    # 我们只在每次 epoch 完，验证完后，再执行学习策略。
+    step_scheduler = False  # do scheduler.step after optimizer.step
+    validation_scheduler = True  # do scheduler.step after validation stage loss
+
+    # 当指标变化小时，减少学习率
+    SchedulerClass = torch.optim.lr_scheduler.ReduceLROnPlateau
+    scheduler_params = dict(
+        mode='min',
+        factor=0.5,
+        patience=1,
+        verbose=False,
+        threshold=0.0001,
+        threshold_mode='abs',
+        cooldown=0,
+        min_lr=1e-8,
+        eps=1e-08
+    )
 
 
 def Kfold(csv_path, k=5):
