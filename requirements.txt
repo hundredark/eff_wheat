@@ -1,7 +1,7 @@
 torch>=1.4.0
 timm>=0.1.22
 torchvision
-pycocotools
+#pycocotools
 pyyaml
 
 # better to manually install pillow-simd

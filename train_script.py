@@ -15,12 +15,12 @@ from effdet import get_efficientdet_config, EfficientDet, DetBenchTrain
 from effdet.efficientdet import HeadNet
 
 
-csv_path = r""
-TRAIN_ROOT_PATH = r'../../global-wheat-detection/train'
+csv_path = r"C:\Users\hundredark\Desktop\paper\wheat\eff_wheat\train_adjusted_v2.csv"
+TRAIN_ROOT_PATH = r'C:\Users\hundredark\Desktop\paper\wheat\dataset\all_images\trainval'
 
 
 def Kfold(csv_path, k=5):
-    marking = pd.read_csv(csv_path)
+    marking = pd.read_csv(csv_path, header=None, names=['image_id', 'width', 'height', 'bbox', 'source'])
     bboxs = np.stack(marking['bbox'].apply(lambda x: eval(x)))
 
     for i, column in enumerate(['x', 'y', 'w', 'h']):
@@ -36,6 +36,8 @@ def Kfold(csv_path, k=5):
         df_folds['source'].values.astype(str),
         df_folds['bbox_count'].apply(lambda x: f'_{x // 15}').values.astype(str)
     )
+    a = marking[['x']].max()
+    print(a)
 
     df_folds.loc[:, 'fold'] = 0
     for fold_number, (train_index, val_index) in enumerate(skf.split(X=df_folds.index, y=df_folds['stratify_group'])):
@@ -54,7 +56,7 @@ def get_net():
     # 根据上面的配置生成网络
     net = EfficientDet(config, pretrained_backbone=False)
     # 加载预训练模型
-    checkpoint = torch.load(r'../../efficientdet_d5-ef44aea8.pth')
+    checkpoint = torch.load(r'./tf_efficientdet_d5-ef44aea8.pth')
     net.load_state_dict(checkpoint)
     config.num_classes = 1
     config.image_size = 512
@@ -64,7 +66,7 @@ def get_net():
 
 
 def train(fold_number = 0):
-    device = torch.device('cuda:0')
+    device = torch.device('cpu')
 
     net = get_net()
     net.to(device)
@@ -111,5 +113,4 @@ def train(fold_number = 0):
 
 
 if __name__ == "__main__":
-    folder = 0
     train(0)

@@ -200,30 +200,3 @@ class TrainGlobalConfig:
         min_lr=1e-8,
         eps=1e-08
     )
-
-
-def run_training():
-
-
-
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=TrainGlobalConfig.batch_size,
-        sampler=RandomSampler(train_dataset),
-        pin_memory=False,
-        drop_last=True,
-        num_workers=TrainGlobalConfig.num_workers,
-        collate_fn=collate_fn,
-    )
-    val_loader = torch.utils.data.DataLoader(
-        validation_dataset,
-        batch_size=TrainGlobalConfig.batch_size,
-        num_workers=TrainGlobalConfig.num_workers,
-        shuffle=False,
-        sampler=SequentialSampler(validation_dataset),
-        pin_memory=False,
-        collate_fn=collate_fn,
-    )
-
-    fitter = Fitter(model=net, device=device, config=TrainGlobalConfig)
-    fitter.fit(train_loader, val_loader)

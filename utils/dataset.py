@@ -73,6 +73,7 @@ class DatasetRetriever(Dataset):
         # 转换成模型输入需要的格式
         boxes[:, 2] = boxes[:, 0] + boxes[:, 2]
         boxes[:, 3] = boxes[:, 1] + boxes[:, 3]
+        boxes = np.clip(boxes, 0, 1024)
         return image, boxes
 
     def load_mixup_image_and_boxes(self, index, imsize=1024):
