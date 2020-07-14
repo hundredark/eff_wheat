@@ -66,7 +66,7 @@ def get_net():
 
 
 def train(fold_number = 0):
-    device = torch.device('cpu')
+    device = torch.device('cuda:0')
 
     net = get_net()
     net.to(device)
