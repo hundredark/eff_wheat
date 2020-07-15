@@ -167,3 +167,5 @@ class Fitter:
             print(message)
         with open(self.log_path, 'a+') as logger:
             logger.write(f'{message}\n')
+
+

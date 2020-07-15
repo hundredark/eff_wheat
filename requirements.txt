@@ -3,6 +3,8 @@ timm>=0.1.22
 torchvision
 #pycocotools
 pyyaml
+sklearn
+albumentations
 
 # better to manually install pillow-simd
 Pillow

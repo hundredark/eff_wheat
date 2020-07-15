@@ -2,12 +2,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
-import warnings
-warnings.filterwarnings("ignore")
-
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-
 from utils.dataset import DatasetRetriever
 from utils.aug import get_train_transforms, get_valid_transforms
 from utils.train_utils import Fitter
@@ -15,17 +11,20 @@ from effdet import get_efficientdet_config, EfficientDet, DetBenchTrain
 from effdet.efficientdet import HeadNet
 
 
-csv_path = r"C:\Users\hundredark\Desktop\paper\wheat\eff_wheat\train_adjusted_v2.csv"
-TRAIN_ROOT_PATH = r'C:\Users\hundredark\Desktop\paper\wheat\dataset\all_images\trainval'
+fold = 1
+csv_path = r"./train_adjusted_v2.csv"
+TRAIN_ROOT_PATH = r'./all_images/trainval'
+weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
+gpu = 0
 
 
 class TrainGlobalConfig:
-    num_workers = 2
-    batch_size = 2
-    n_epochs = 40  # n_epochs = 40
+    num_workers = 4
+    batch_size = 6
+    n_epochs = 50  # n_epochs = 40
     lr = 0.0004
 
-    folder = 'effdet5-cutmix-augmix1'
+    folder = 'effdet5-cutmix-augmix-fold1'
 
     # -------------------
     verbose = True
@@ -88,18 +87,30 @@ def get_net():
     config = get_efficientdet_config('tf_efficientdet_d5')
     # 根据上面的配置生成网络
     net = EfficientDet(config, pretrained_backbone=False)
+
+    #'''
+    config.num_classes = 1
+    config.image_size = 512
+    net.class_net = HeadNet(config, num_outputs=config.num_classes, norm_kwargs=dict(eps=.001, momentum=.01))
+    checkpoint = torch.load(weight)
+    net.load_state_dict(checkpoint['model_state_dict'])
+    #'''
+
+    '''
     # 加载预训练模型
-    checkpoint = torch.load(r'./tf_efficientdet_d5-ef44aea8.pth')
+    checkpoint = torch.load(weight)
     net.load_state_dict(checkpoint)
     config.num_classes = 1
     config.image_size = 512
     # norm_kwargs 设置的是 BATCHNORM2D 的参数
     net.class_net = HeadNet(config, num_outputs=config.num_classes, norm_kwargs=dict(eps=.001, momentum=.01))
+    '''
+
     return DetBenchTrain(net, config)
 
 
 def train(fold_number = 0):
-    device = torch.device('cuda:0')
+    device = torch.device('cuda:{}'.format(gpu))
 
     net = get_net()
     net.to(device)
@@ -146,4 +157,5 @@ def train(fold_number = 0):
 
 
 if __name__ == "__main__":
-    train(0)
+    print("{} fold training start".format(fold))
+    train(fold)

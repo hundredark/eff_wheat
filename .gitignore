@@ -7,7 +7,8 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-effdet5-cutmix-augmix1
+all_images
+effdet5-cutmix-*
 .Python
 build/
 develop-eggs/
