@@ -27,8 +27,9 @@ class DatasetRetriever(Dataset):
             # 具体定义在后面
             image, boxes = self.load_image_and_boxes(index)
         else:
-            # 具体定义在后面
-            image, boxes = self.load_mixup_image_and_boxes(index)
+            image, boxes = self.load_cutmix_image_and_boxes(index)
+
+        #draw(image, boxes)
 
         # 这里只有一类的目标定位问题，标签数量就是 bbox 的数量
         labels = torch.ones((boxes.shape[0],), dtype=torch.int64)
@@ -65,7 +66,7 @@ class DatasetRetriever(Dataset):
         # 转换图片通道 从 BGR 到 RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
         # 0,1 归一化
-        image /= 255.0
+        #image /= 255.0
         # 获取对应 image_id 的信息
         records = self.marking[self.marking['image_id'] == image_id]
         # 获取 bbox
@@ -76,13 +77,54 @@ class DatasetRetriever(Dataset):
         boxes = np.clip(boxes, 0, 1024)
         return image, boxes
 
-    def load_mixup_image_and_boxes(self, index, imsize=1024):
-        # 加载图片和 bbox
-        image, boxes = self.load_image_and_boxes(index)
-        # 随机加载另外一张图片和 bbox
-        r_image, r_boxes = self.load_image_and_boxes(random.randint(0, self.image_ids.shape[0] - 1))
-        # 进行 mixup 图片的融合，这里简单的利用 0.5 权重
-        mixup_image = (image + r_image) / 2
-        # 进行 mixup bbox的融合
-        mixup_boxes = np.concatenate((boxes, r_boxes), 0)
-        return mixup_image, mixup_boxes
+    def load_cutmix_image_and_boxes(self, index, imsize=1024):
+        """ 
+        This implementation of cutmix author:  https://www.kaggle.com/nvnnghia 
+        Refactoring and adaptation: https://www.kaggle.com/shonenkov
+        """
+        w, h = imsize, imsize
+        s = imsize // 2
+    
+        xc, yc = [int(random.uniform(imsize * 0.25, imsize * 0.75)) for _ in range(2)]  # center x, y
+        indexes = [index] + [random.randint(0, self.image_ids.shape[0] - 1) for _ in range(3)]
+
+        result_image = np.full((imsize, imsize, 3), 1, dtype=np.float32)
+        result_boxes = []
+
+        for i, index in enumerate(indexes):
+            image, boxes = self.load_image_and_boxes(index)
+            if i == 0:
+                x1a, y1a, x2a, y2a = max(xc - w, 0), max(yc - h, 0), xc, yc  # xmin, ymin, xmax, ymax (large image)
+                x1b, y1b, x2b, y2b = w - (x2a - x1a), h - (y2a - y1a), w, h  # xmin, ymin, xmax, ymax (small image)
+            elif i == 1:  # top right
+                x1a, y1a, x2a, y2a = xc, max(yc - h, 0), min(xc + w, s * 2), yc
+                x1b, y1b, x2b, y2b = 0, h - (y2a - y1a), min(w, x2a - x1a), h
+            elif i == 2:  # bottom left
+                x1a, y1a, x2a, y2a = max(xc - w, 0), yc, xc, min(s * 2, yc + h)
+                x1b, y1b, x2b, y2b = w - (x2a - x1a), 0, max(xc, w), min(y2a - y1a, h)
+            elif i == 3:  # bottom right
+                x1a, y1a, x2a, y2a = xc, yc, min(xc + w, s * 2), min(s * 2, yc + h)
+                x1b, y1b, x2b, y2b = 0, 0, min(w, x2a - x1a), min(y2a - y1a, h)
+            result_image[y1a:y2a, x1a:x2a] = image[y1b:y2b, x1b:x2b]
+            padw = x1a - x1b
+            padh = y1a - y1b
+
+            boxes[:, 0] += padw
+            boxes[:, 1] += padh
+            boxes[:, 2] += padw
+            boxes[:, 3] += padh
+
+            result_boxes.append(boxes)
+
+        result_boxes = np.concatenate(result_boxes, 0)
+        np.clip(result_boxes[:, 0:], 0, 2 * s, out=result_boxes[:, 0:])
+        result_boxes = result_boxes.astype(np.int32)
+        result_boxes = result_boxes[np.where((result_boxes[:,2]-result_boxes[:,0])*(result_boxes[:,3]-result_boxes[:,1]) > 0)]
+        return result_image, result_boxes
+
+def draw(image, boxes):
+    resultImg = image
+    for i, box in enumerate(boxes):
+        xmin, ymin, xmax, ymax = box
+        cv2.rectangle(resultImg, (int(xmin), int(ymin)), (int(xmax), int(ymax)), (0, 0, 255), 3)  # red
+    cv2.imwrite('inter.jpg', resultImg)

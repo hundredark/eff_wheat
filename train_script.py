@@ -11,7 +11,7 @@ from effdet import get_efficientdet_config, EfficientDet, DetBenchTrain
 from effdet.efficientdet import HeadNet
 
 
-fold = 1
+fold = 0
 csv_path = r"./train_adjusted_v2.csv"
 TRAIN_ROOT_PATH = r'./all_images/trainval'
 weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
@@ -24,7 +24,7 @@ class TrainGlobalConfig:
     n_epochs = 50  # n_epochs = 40
     lr = 0.0004
 
-    folder = 'effdet5-cutmix-augmix-fold1'
+    folder = 'effdet5-cutmix-augmix-fold{}'.format(fold)
 
     # -------------------
     verbose = True
