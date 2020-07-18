@@ -66,7 +66,7 @@ class DatasetRetriever(Dataset):
         # 转换图片通道 从 BGR 到 RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
         # 0,1 归一化
-        #image /= 255.0
+        image /= 255.0
         # 获取对应 image_id 的信息
         records = self.marking[self.marking['image_id'] == image_id]
         # 获取 bbox

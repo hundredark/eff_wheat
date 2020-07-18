@@ -1,4 +1,5 @@
 # 导入依赖的库
+import os
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
@@ -15,7 +16,7 @@ fold = 0
 csv_path = r"./train_adjusted_v2.csv"
 TRAIN_ROOT_PATH = r'./all_images/trainval'
 weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
-gpu = 0
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
 class TrainGlobalConfig:
@@ -110,7 +111,7 @@ def get_net():
 
 
 def train(fold_number = 0):
-    device = torch.device('cuda:{}'.format(gpu))
+    device = torch.device('cuda:0')
 
     net = get_net()
     net.to(device)
