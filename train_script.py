@@ -21,9 +21,9 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 class TrainGlobalConfig:
     num_workers = 4
-    batch_size = 6
+    batch_size = 8
     n_epochs = 50  # n_epochs = 40
-    lr = 0.0004
+    lr = 0.001
 
     folder = 'effdet5-cutmix-augmix-fold{}'.format(fold)
 
@@ -42,7 +42,7 @@ class TrainGlobalConfig:
     scheduler_params = dict(
         mode='min',
         factor=0.5,
-        patience=1,
+        patience=4,
         verbose=False,
         threshold=0.0001,
         threshold_mode='abs',

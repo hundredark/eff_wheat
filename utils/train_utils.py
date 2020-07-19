@@ -18,6 +18,9 @@ class Fitter:
         if not os.path.exists(self.base_dir):
             os.makedirs(self.base_dir)
 
+        # 梯度累加
+        self.accumulation_steps = 8
+
         # 打印 log 的地址，保存模型的训练信息
         self.log_path = f'{self.base_dir}/log.txt'
         # 设定一个比较大的 best_summary_loss 值，为了保存最优的模型
@@ -126,15 +129,20 @@ class Fitter:
             boxes = [target['boxes'].to(self.device).float() for target in targets]
             labels = [target['labels'].to(self.device).float() for target in targets]
 
-            self.optimizer.zero_grad()
+
             # 前向传播计算 loss
             loss, _, _ = self.model(images, boxes, labels)
+            loss = loss / self.accumulation_steps
             # 反向传播计算 grad
             loss.backward()
             # 更新 loss
             summary_loss.update(loss.detach().item(), batch_size)
+
             # 根据优化算法更新 parameter
-            self.optimizer.step()
+            if ((step+1) % self.accumulation_steps) == 0:
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+
             # 执行学习策略
             if self.config.step_scheduler:
                 self.scheduler.step()
