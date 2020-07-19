@@ -21,11 +21,11 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 class TrainGlobalConfig:
     num_workers = 4
-    batch_size = 8
-    n_epochs = 50  # n_epochs = 40
+    batch_size = 2
+    n_epochs = 100  # n_epochs = 40
     lr = 0.001
 
-    folder = 'effdet5-cutmix-augmix-fold{}'.format(fold)
+    folder = 'effdet5-cutmix-augmix-1024-fold{}'.format(fold)
 
     # -------------------
     verbose = True
@@ -89,23 +89,23 @@ def get_net():
     # 根据上面的配置生成网络
     net = EfficientDet(config, pretrained_backbone=False)
 
-    #'''
+    '''
     config.num_classes = 1
     config.image_size = 512
     net.class_net = HeadNet(config, num_outputs=config.num_classes, norm_kwargs=dict(eps=.001, momentum=.01))
     checkpoint = torch.load(weight)
     net.load_state_dict(checkpoint['model_state_dict'])
-    #'''
-
     '''
+
+    # '''
     # 加载预训练模型
     checkpoint = torch.load(weight)
     net.load_state_dict(checkpoint)
     config.num_classes = 1
-    config.image_size = 512
+    config.image_size = 1024
     # norm_kwargs 设置的是 BATCHNORM2D 的参数
     net.class_net = HeadNet(config, num_outputs=config.num_classes, norm_kwargs=dict(eps=.001, momentum=.01))
-    '''
+    # '''
 
     return DetBenchTrain(net, config)
 
