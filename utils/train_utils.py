@@ -132,7 +132,6 @@ class Fitter:
 
             # 前向传播计算 loss
             loss, _, _ = self.model(images, boxes, labels)
-            loss = loss / self.accumulation_steps
             # 反向传播计算 grad
             loss.backward()
             # 更新 loss

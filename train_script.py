@@ -23,7 +23,7 @@ class TrainGlobalConfig:
     num_workers = 4
     batch_size = 8
     n_epochs = 50  # n_epochs = 40
-    lr = 0.001
+    lr = 0.0008
 
     folder = 'effdet5-cutmix-augmix-fold{}'.format(fold)
 
