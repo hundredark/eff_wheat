@@ -15,8 +15,7 @@ from effdet.efficientdet import HeadNet
 fold = 0
 csv_path = r"./train_adjusted_v2.csv"
 TRAIN_ROOT_PATH = r'./all_images/trainval'
-#weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
-weight = "tf_efficientdet_d5-ef44aea8.pth"
+weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
@@ -25,6 +24,7 @@ class TrainGlobalConfig:
     batch_size = 2
     n_epochs = 100  # n_epochs = 40
     lr = 0.001
+    grad_accumulation_steps = 64 / batch_size
 
     folder = 'effdet5-cutmix-augmix-1024-fold{}'.format(fold)
 
@@ -41,7 +41,7 @@ class TrainGlobalConfig:
     # 当指标变化小时，减少学习率
     SchedulerClass = torch.optim.lr_scheduler.ReduceLROnPlateau
     scheduler_params = dict(
-        mode='min',
+        mode='max',
         factor=0.5,
         patience=4,
         verbose=False,
@@ -120,16 +120,16 @@ def train(fold_number = 0):
     df_folds, marking = Kfold(csv_path, k=5)
 
     train_dataset = DatasetRetriever(
-        path=TRAIN_ROOT_PATH,
         image_ids=df_folds[df_folds['fold'] != fold_number].index.values,
+        path=TRAIN_ROOT_PATH,
         marking=marking,
         transforms=get_train_transforms(),
         test=False,
     )
 
     validation_dataset = DatasetRetriever(
-        path=TRAIN_ROOT_PATH,
         image_ids=df_folds[df_folds['fold'] == fold_number].index.values,
+        path=TRAIN_ROOT_PATH,
         marking=marking,
         transforms=get_valid_transforms(),
         test=True,
