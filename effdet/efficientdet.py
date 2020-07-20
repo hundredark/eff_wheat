@@ -13,7 +13,7 @@ from collections import OrderedDict
 from typing import List
 
 from timm import create_model
-from timm.models.layers import create_conv2d, drop_path, create_pool2d, Swish
+from timm.models.layers import create_conv2d, drop_path, create_pool2d, Swish, get_act_layer
 from .config import get_fpn_config
 
 _DEBUG = False
@@ -445,16 +445,16 @@ class EfficientDet(nn.Module):
     def __init__(self, config, norm_kwargs=None, pretrained_backbone=True, alternate_init=False):
         super(EfficientDet, self).__init__()
         norm_kwargs = norm_kwargs or dict(eps=.001, momentum=.01)
-
         self.backbone = create_model(
             config.backbone_name, features_only=True, out_indices=(2, 3, 4),
             pretrained=pretrained_backbone, **config.backbone_args)
-
         feature_info = [dict(num_chs=f['num_chs'], reduction=f['reduction'])
                         for i, f in enumerate(self.backbone.feature_info())]
-        self.fpn = BiFpn(config, feature_info, norm_kwargs=norm_kwargs)
-        self.class_net = HeadNet(config, num_outputs=config.num_classes, norm_kwargs=norm_kwargs)
-        self.box_net = HeadNet(config, num_outputs=4, norm_kwargs=norm_kwargs)
+
+        act_layer = get_act_layer(config.act_type)
+        self.fpn = BiFpn(config, feature_info, norm_kwargs=norm_kwargs, act_layer=act_layer)
+        self.class_net = HeadNet(config, num_outputs=config.num_classes, norm_kwargs=norm_kwargs, act_layer=act_layer)
+        self.box_net = HeadNet(config, num_outputs=4, norm_kwargs=norm_kwargs, act_layer=act_layer)
 
         for n, m in self.named_modules():
             if 'backbone' not in n:

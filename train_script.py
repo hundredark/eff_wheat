@@ -15,7 +15,7 @@ from effdet.efficientdet import HeadNet
 fold = 0
 csv_path = r"./train_adjusted_v2.csv"
 TRAIN_ROOT_PATH = r'./all_images/trainval'
-weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
+weight = "tf_efficientdet_d5-ef44aea8.pth"
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
@@ -59,6 +59,10 @@ def Kfold(csv_path, k=5):
 
     for i, column in enumerate(['x', 'y', 'w', 'h']):
         marking[column] = bboxs[:,i]
+    marking['area'] = marking.w * marking.h
+    marking['class'] = 1
+    marking['size'] = (marking.area > 100).astype(int)
+
     marking.drop(columns=['bbox'], inplace=True)
 
     skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
