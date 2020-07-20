@@ -15,7 +15,8 @@ from effdet.efficientdet import HeadNet
 fold = 0
 csv_path = r"./train_adjusted_v2.csv"
 TRAIN_ROOT_PATH = r'./all_images/trainval'
-weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
+#weight = "./effdet5-cutmix-augmix0/last-checkpoint.bin"
+weight = "tf_efficientdet_d5-ef44aea8.pth"
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
