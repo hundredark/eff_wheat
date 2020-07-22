@@ -1,2 +1,0 @@
-from .model_config import get_efficientdet_config, get_fpn_config, default_detection_model_configs
-from .train_config import default_detection_train_config
