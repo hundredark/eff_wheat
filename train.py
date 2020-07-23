@@ -457,10 +457,9 @@ class Fitter:
             loss = output['loss'] # / self.config.grad_accumulation_steps
             loss.backward()
 
-            summary_loss.update(loss.detach().item(), batch_size)
-
             # Gradient accumulation
             if (step + 1) % self.config.grad_accumulation_steps == 0:
+                summary_loss.update(loss.detach().item(), batch_size*self.config.grad_accumulation_steps)
                 self.optimizer.step()
                 self.optimizer.zero_grad()
                 if self.config.step_scheduler:
